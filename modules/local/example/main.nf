@@ -24,13 +24,11 @@ process TEST_MODULE {
    
     // 4. 进程输入输出定义
     input:
-    // 设置默认值方式1: 使用 ifEmpty
-    tuple val(meta), path(input_dir, stageAs: 'input/*') 
-    
-    // 或者方式2: 在workflow中传入时设置
-    // tuple val(meta), path(input_dir) 
+    tuple val(meta), 
+          path(pdb_file, stageAs: "pdb/*"), //收集在临时目录 pdb 下
+          path(sdf_file, stageAs: "sdf/*")
+    // tuple val(meta), path(input_dir, stageAs: 'input/*') // stageAs：文件自动组织到指定目录
 
-    // conf/modules.config 中定义了输出文件的发布路径
     output:
     // tuple val(meta), path("*.html"), emit: html 
     // tuple val(meta), path("*.zip") , emit: zip
@@ -54,7 +52,8 @@ process TEST_MODULE {
 
     """
     echo ${meta.id}
-    echo ${input_dir}
+    echo ${pdb_file}
+    echo ${sdf_file}
     
     example.py -f  ${prefix}_module.txt ${args}    
 
