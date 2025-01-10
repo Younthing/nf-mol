@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/open-bio/molflow/master/assets/schema_input.json",
-    "title": "open-bio/molflow pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
+    "title": "PBD-SDF 流程 - 输入参数验证",
+    "description": "用于验证 PBD-SDF 文件格式的模式定义",
     "type": "array",
     "items": {
         "type": "object",
@@ -10,24 +10,24 @@
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "errorMessage": "样本名称不能为空且不能包含空格",
                 "meta": ["id"]
             },
-            "fastq_1": {
+            "pdb_file": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+\\.pdb$",
+                "errorMessage": "确认PDB文件存在，路径不能为空，不能包含空格，且必须以.pdb结尾"
             },
-            "fastq_2": {
+            "sdf_file": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+\\.sdf$",
+                "errorMessage": "确认SDF文件存在，路径不能为空，不能包含空格，且必须以.sdf结尾"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "pdb_file", "sdf_file"]
     }
 }

@@ -3,6 +3,9 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+/* IMPORT 语句 */
+// 导入格式: include { 组件名 } from '路径' 路径可以到main.nf也可以到它的父目录
+
 include { TEST_MODULE } from '../modules/local/example/main'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap } from 'plugin/nf-schema'
@@ -30,7 +33,17 @@ workflow MOLFLOW {
     TEST_MODULE(
         ch_samplesheet
     )
+
+    // mix() 合并通道示例:
+    // 假设 TEST_MODULE.out.module 输出为: ['test1', 'result1.txt']
+    //                                    ['test2', 'result2.txt']
+    // collect { it[1] } 提取第二个元素: ['result1.txt', 'result2.txt']
+    // mix 操作后: ch_multiqc_files 现在包含: ['result1.txt', 'result2.txt']
     ch_multiqc_files = ch_multiqc_files.mix(TEST_MODULE.out.module.collect { it[1] })
+
+    // first() 获取第一个元素
+    // 假设 TEST_MODULE.out.versions 输出: ['v1.0', 'v2.0']
+    // first() 后获得: 'v1.0'
     ch_versions = ch_versions.mix(TEST_MODULE.out.versions.first())
 
     //
@@ -44,18 +57,26 @@ workflow MOLFLOW {
             newLine: true,
         )
         .set { ch_collated_versions }
-
+    // 生成的YAML文件内容:
+    // test_module: v1.2.3
+    // xxx: v 
+    // xxx: v 
 
     //
     // MODULE: MultiQC
     //
+    // 读取默认的MultiQC配置文件，定义报告的基本布局和设置
     ch_multiqc_config = Channel.fromPath(
         "${projectDir}/assets/multiqc_config.yml",
         checkIfExists: true
     )
+
+    // 允许用户提供自定义配置文件，覆盖默认设置
     ch_multiqc_custom_config = params.multiqc_config
         ? Channel.fromPath(params.multiqc_config, checkIfExists: true)
         : Channel.empty()
+
+
     ch_multiqc_logo = params.multiqc_logo
         ? Channel.fromPath(params.multiqc_logo, checkIfExists: true)
         : Channel.empty()
