@@ -1,0 +1,39 @@
+bump_version: null
+lint:
+  files_exist:
+  - CODE_OF_CONDUCT.md
+  - assets/nf-core-molflow_logo_light.png
+  - docs/images/nf-core-molflow_logo_light.png
+  - docs/images/nf-core-molflow_logo_dark.png
+  - .github/ISSUE_TEMPLATE/config.yml
+  - .github/workflows/awstest.yml
+  - .github/workflows/awsfulltest.yml
+  files_unchanged:
+  - CODE_OF_CONDUCT.md
+  - assets/nf-core-molflow_logo_light.png
+  - docs/images/nf-core-molflow_logo_light.png
+  - docs/images/nf-core-molflow_logo_dark.png
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  multiqc_config:
+  - report_comment
+  nextflow_config:
+  - manifest.name
+  - manifest.homePage
+  - validation.help.beforeText
+  - validation.help.afterText
+  - validation.summary.beforeText
+  - validation.summary.afterText
+nf_core_version: 3.0.2
+org_path: null
+repository_type: pipeline
+template:
+  author: fanxi
+  description: molecular-flow is a pipeline for molecular analysis
+  force: true
+  is_nfcore: false
+  name: molflow
+  org: open-bio
+  outdir: .
+  skip_features: null
+  version: 1.0.0dev
+update: null
