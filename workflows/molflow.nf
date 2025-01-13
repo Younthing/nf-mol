@@ -33,6 +33,7 @@ workflow MOLFLOW {
     TEST_BASE(
         ch_samplesheet
     )
+    
 
     // mix() 合并通道示例:
     // 假设 TEST_MODULE.out.module 输出为: ['test1', 'result1.txt']
