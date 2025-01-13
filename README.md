@@ -1,5 +1,3 @@
-
-
 # open-bio/molflow
 
 [![GitHub Actions CI Status](https://github.com/open-bio/molflow/actions/workflows/ci.yml/badge.svg)](https://github.com/open-bio/molflow/actions/workflows/ci.yml)
@@ -57,6 +55,7 @@ Now, you can run the pipeline using:
 ```bash
 nextflow run open-bio/molflow \
    -profile <docker/singularity/.../institute> \
+   -params-file params.yaml \
    --input samplesheet.csv \
    --outdir <OUTDIR>
 ```

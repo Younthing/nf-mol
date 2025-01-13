@@ -1,0 +1,11 @@
+input: "test.csv"
+outdir: "results"
+test_string: "Hello World"
+test_number: 42
+test_list:
+  - item1
+  - item2
+test_map:
+  key1: value1
+  key2: value2
+# nextflow run main.nf -params-file params.yaml
