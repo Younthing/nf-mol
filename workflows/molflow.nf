@@ -76,44 +76,63 @@ workflow MOLFLOW {
         ? Channel.fromPath(params.multiqc_config, checkIfExists: true)
         : Channel.empty()
 
-
+    // 允许用户提供自定义log，覆盖默认设置
     ch_multiqc_logo = params.multiqc_logo
         ? Channel.fromPath(params.multiqc_logo, checkIfExists: true)
         : Channel.empty()
 
+        // 使用 paramsSummaryMap 函数生成工作流参数摘要
+    // 参数包括 workflow 对象和 schema 文件路径
     summary_params = paramsSummaryMap(
-        workflow,
-        parameters_schema: "nextflow_schema.json"
-    )
+            workflow,
+            parameters_schema: "nextflow_schema.json"
+        )
+    
+    // 创建一个值为参数摘要的通道,用于 MultiQC 报告
     ch_workflow_summary = Channel.value(paramsSummaryMultiqc(summary_params))
+    
+    // 将工作流摘要文件混入 multiqc 文件通道
+    // collectFile 操作符将内容收集到指定名称的文件中
     ch_multiqc_files = ch_multiqc_files.mix(
         ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
     )
+    
+    // 三元运算符检查是否提供了自定义方法描述文件
+    // 如果没有则使用默认模板文件
     ch_multiqc_custom_methods_description = params.multiqc_methods_description
         ? file(params.multiqc_methods_description, checkIfExists: true)
         : file("${projectDir}/assets/methods_description_template.yml", checkIfExists: true)
+    
+    // 创建包含方法描述文本的通道
     ch_methods_description = Channel.value(
         methodsDescriptionText(ch_multiqc_custom_methods_description)
     )
-
+    
+    // 将版本信息文件混入 multiqc 文件通道
     ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
+    
+    // 将方法描述文件混入 multiqc 文件通道
+    // sort:true 表示对内容进行排序
     ch_multiqc_files = ch_multiqc_files.mix(
         ch_methods_description.collectFile(
             name: 'methods_description_mqc.yaml',
             sort: true,
         )
     )
-
+    
+    // 调用 MULTIQC 流程
+    // collect() 和 toList() 操作符将通道内容转换为列表
     MULTIQC(
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList(),
-        [],
-        [],
+        ch_multiqc_files.collect(),     // 所有收集的 MultiQC 输入文件
+        ch_multiqc_config.toList(),     // MultiQC 配置文件
+        ch_multiqc_custom_config.toList(), // 自定义配置文件
+        ch_multiqc_logo.toList(),       // Logo 文件
+        [],                             // 空列表占位符
+        [],                             // 空列表占位符
     )
-
+    
+    // emit 块定义工作流输出通道
     emit:
-    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
-    versions = ch_versions // channel: [ path(versions.yml) ]
+    multiqc_report = MULTIQC.out.report.toList() // 输出 MultiQC HTML 报告路径
+    versions = ch_versions                        // 输出软件版本信息文件路径
 }
