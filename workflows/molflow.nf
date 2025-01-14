@@ -7,6 +7,7 @@
 // 导入格式: include { 组件名 } from '路径' 路径可以到main.nf也可以到它的父目录
 
 include { TEST_BASE } from '../modules/local/example/main'
+include { TEST_PLOTLY } from '../modules/local/example/test_plotly'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -33,19 +34,26 @@ workflow MOLFLOW {
     TEST_BASE(
         ch_samplesheet
     )
-    
+
+    TEST_PLOTLY()
 
     // mix() 合并通道示例:
     // 假设 TEST_MODULE.out.module 输出为: ['test1', 'result1.txt']
     //                                    ['test2', 'result2.txt']
     // collect { it[1] } 提取第二个元素: ['result1.txt', 'result2.txt']
     // mix 操作后: ch_multiqc_files 现在包含: ['result1.txt', 'result2.txt']
-    ch_multiqc_files = ch_multiqc_files.mix(TEST_BASE.out.module.collect { it[1] })
+    ch_multiqc_files = ch_multiqc_files.mix(
+        TEST_BASE.out.module.collect { it[1] },
+        TEST_PLOTLY.out.plot.collect()
+    )
 
     // first() 获取第一个元素
     // 假设 TEST_MODULE.out.versions 输出: ['v1.0', 'v2.0']
     // first() 后获得: 'v1.0'
-    ch_versions = ch_versions.mix(TEST_BASE.out.versions.first())
+    ch_versions = ch_versions.mix(
+        TEST_BASE.out.versions.first(),
+        TEST_PLOTLY.out.versions.first()
+    )
 
     //
     // Collate and save software versions
