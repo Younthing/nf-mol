@@ -51,8 +51,8 @@ workflow MOLFLOW {
     // 假设 TEST_MODULE.out.versions 输出: ['v1.0', 'v2.0']
     // first() 后获得: 'v1.0'
     ch_versions = ch_versions.mix(
-        TEST_BASE.out.versions.first(),
-        TEST_PLOTLY.out.versions.first()
+        TEST_BASE.out.versions,
+        TEST_PLOTLY.out.versions
     )
 
     //
