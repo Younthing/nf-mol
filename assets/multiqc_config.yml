@@ -1,5 +1,5 @@
 report_comment: >
-    此报告由 MultiQC 生成，包含流程分析的质控结果.
+  此报告由 MultiQC 生成，包含流程分析的质控结果.
 
 report_section_order:
   "open-bio-molflow-methods-description":
@@ -13,17 +13,20 @@ export_plots: true
 
 disable_version_detection: true
 
-custom_content:
-    order:
-        - scatter_plot
-
-custom_data:
-    scatter_plot:
-        file_format: 'html'
-        section_name: 'Random Scatter Plot'
-        description: '使用Plotly生成的随机数据散点图'
-        plot_type: 'html'
-
+# 文件匹配 (根据 sp): MultiQC 首先会根据 sp 定义的搜索模式遍历指定的目录。
 sp:
-    scatter_plot:
-        fn: '*scatter_plot_mqc.html'
+  scatter_plot:
+    fn: "*scatter_plot_mqc.html"
+
+# 排序
+custom_content:
+  order:
+    - scatter_plot
+
+# 定义元数据
+custom_data:
+  scatter_plot:
+    file_format: "html"
+    section_name: "Random Scatter Plot"
+    description: "使用Plotly生成的随机数据散点图"
+    plot_type: "html"
