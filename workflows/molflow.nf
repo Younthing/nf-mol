@@ -7,7 +7,7 @@
 // 导入格式: include { 组件名 } from '路径' 路径可以到main.nf也可以到它的父目录
 
 include { TEST_BASE } from '../modules/local/example/main'
-include { TEST_PLOTLY } from '../modules/local/example/test_plotly'
+include { TEST_PLOTLY } from '../modules/local/example_plotly'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -44,7 +44,7 @@ workflow MOLFLOW {
     // mix 操作后: ch_multiqc_files 现在包含: ['result1.txt', 'result2.txt']
     ch_multiqc_files = ch_multiqc_files.mix(
         TEST_BASE.out.module.collect { it[1] },
-        TEST_PLOTLY.out.plot.collect()
+        TEST_PLOTLY.out.plot.collect(),
     )
 
     // first() 获取第一个元素
@@ -52,7 +52,7 @@ workflow MOLFLOW {
     // first() 后获得: 'v1.0'
     ch_versions = ch_versions.mix(
         TEST_BASE.out.versions,
-        TEST_PLOTLY.out.versions
+        TEST_PLOTLY.out.versions,
     )
 
     //
