@@ -1,0 +1,41 @@
+nextflow_process {
+
+    name "Test Process PDB2GMX_GROMACS"
+    script "../pdb2gmx.nf"
+    process "PDB2GMX_GROMACS"
+
+    test("1fjs_protein[pdb]") {
+
+        when {
+            params {
+                outdir = "tests/results"
+            }
+            process {
+                """
+                def meta = [id: '1fjs']
+                input[0] = tuple(meta, file("${projectDir}/data/gromacs/1fjs_protein.pdb"))
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            
+            // 验证结构和拓扑文件存在
+            assert path("${process.out.structure.get(0).get(1)}").exists()
+            assert path("${process.out.topology.get(0).get(1)}").exists()
+            
+       
+            // 验证文件名格式
+            assert process.out.structure.get(0).get(1).toString().endsWith('.gro')
+            assert process.out.topology.get(0).get(1).toString().endsWith('.top')
+            
+            // 验证主要文件非空
+            assert path("${process.out.structure.get(0).get(1)}").size() > 0
+            assert path("${process.out.topology.get(0).get(1)}").size() > 0
+            
+        }
+
+    }
+
+}
