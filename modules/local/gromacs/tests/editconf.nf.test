@@ -1,0 +1,54 @@
+nextflow_process {
+
+    name "Test Process EDITCONF_GROMACS"
+    script "../editconf.nf"
+    process "EDITCONF_GROMACS"
+
+    test("1fjs_processed[gro]") {
+        
+        setup {
+            run("PDB2GMX_GROMACS") {
+                script "../pdb2gmx.nf"
+                process {
+                    """
+                    def meta = [id: 'sample_1']
+                    input[0] = tuple(meta, file("${projectDir}/data/gromacs/1fjs_protein.pdb"))
+                    """
+                }
+            }
+        }
+
+        when {
+            params {
+                outdir = "tests/results"
+                editconf_distance = "1.0"
+                editconf_box_type = "dodecahedron"
+                editconf_center = true
+            }
+            process {
+                """
+                input[0] = PDB2GMX_GROMACS.out.structure
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            
+            // 验证输出结构文件存在
+            assert path("${process.out.structure.get(0).get(1)}").exists()
+            
+            // 验证文件名格式
+            assert process.out.structure.get(0).get(1).toString().endsWith('_newbox.gro')
+            
+            // 验证主要文件非空
+            assert path("${process.out.structure.get(0).get(1)}").size() > 0
+            
+            
+            with(process.out.structure.get(0)) {
+                assert get(0).id == 'sample_1'  // 验证meta信息
+                assert get(1).toString().contains('newbox.gro')  // 验证输出文件名
+            }
+        }
+    }
+}
