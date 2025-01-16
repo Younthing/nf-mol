@@ -49,7 +49,7 @@ process PDB2GMX_GROMACS {
         -water ${water} \\
         -ff ${ff} \\
         ${h_flag} \\
-        ${args}
+        ${args} &> pdb2gmx.log
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
