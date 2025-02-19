@@ -69,10 +69,13 @@ workflow PIPELINE_INITIALISATION {
 
     ch_samplesheet = Channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-        .map { meta, pdb_file, sdf_file ->
-            return [meta, pdb_file, sdf_file]
+        .map { meta, pdb, mol ->
+            // 如果是地址，将其转换为文件
+            pdb = pdb instanceof File ? pdb : file(pdb)
+            mol = mol instanceof File ? mol : file(mol)
+
+            return [meta, pdb, mol]
         }
-        .groupTuple()
 
     emit:
     samplesheet = ch_samplesheet

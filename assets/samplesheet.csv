@@ -1,3 +1,4 @@
-sample,pdb_file,sdf_file
+id,pdb,mol
 SAMPLE1,protein1.pdb,molecule1.sdf
 SAMPLE2,protein2.pdb,molecule2.sdf
+SAMPLE3,1fjs,molecule3.sdfs

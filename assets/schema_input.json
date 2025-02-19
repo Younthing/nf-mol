@@ -7,27 +7,23 @@
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "id": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "样本名称不能为空且不能包含空格",
+                "errorMessage": "ID不能为空且不能包含空格",
                 "meta": ["id"]
             },
-            "pdb_file": {
+            "pdb": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^\\S+\\.pdb$",
-                "errorMessage": "路径不能为空，不能包含空格，且必须以.pdb结尾"
+                "pattern": "^\\S+(\\.pdb)?$",
+                "errorMessage": "必须是非空的字符串，pdb文件地址、蛋白名"
             },
-            "sdf_file": {
+            "mol": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^\\S+\\.sdf$",
-                "errorMessage": "路径不能为空，不能包含空格，且必须以.sdf结尾"
+                "pattern": "^\\S+(\\.sdf)?$",
+                "errorMessage": "必须是非空的字符串，sdf文件地址、SMILES"
             }
         },
-        "required": ["sample", "pdb_file", "sdf_file"]
+        "required": ["id", "pdb", "mol"]
     }
 }
