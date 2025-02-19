@@ -39,6 +39,9 @@ workflow {
     //
     // 工作流程：运行主工作流程
     //
+    PIPELINE_INITIALISATION.out.samplesheet
+        .view { "Samplesheet content: $it" }  // 添加这一行来查看内容
+    
     OPENBIO_MOLFLOW(
         PIPELINE_INITIALISATION.out.samplesheet
     )

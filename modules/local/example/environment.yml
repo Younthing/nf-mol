@@ -2,4 +2,4 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - gromacs=2024.4
+  - conda-forge::gromacs=2024.5 # TODO：conda 可以，wave不行,可能是conda安装sh文件的权限

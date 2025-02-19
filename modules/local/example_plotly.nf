@@ -1,7 +1,7 @@
 process TEST_PLOTLY {
     tag "Plotly plot"
 
-    conda "conda-forge::python=3.12 conda-forge::plotly=5.13.1 conda-forge::pandas=1.5.3"
+    conda "conda-forge::python=3.10 conda-forge::plotly=5.13.1 conda-forge::pandas=1.5.3"
 
     output:
     path "scatter_plot_mqc.html", emit: plot
