@@ -5,7 +5,7 @@ process PDB2GMX_GROMACS {
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
         ? 'https://depot.galaxyproject.org/singularity/gromacs:2021.3--mpi_openmpi_h9969a6a_0'
-        : 'biocontainers/gromacs:2021.3--mpi_openmpi_h9969a6a_0'}"
+        : 'docker.io/gromacs/gromacs:2022.2'}"
 
     // 按样本保存目录
     publishDir [
