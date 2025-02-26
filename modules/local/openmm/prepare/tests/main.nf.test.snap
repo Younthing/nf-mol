@@ -5,10 +5,10 @@
                 "0": [
                     [
                         {
-                            "id": "1fjs",
+                            "id": "6w70",
                             "single_end": false
                         },
-                        "1fjs_prepared.pdb:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "6w70_prepared.pdb:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "1": [
@@ -17,10 +17,10 @@
                 "structure": [
                     [
                         {
-                            "id": "1fjs",
+                            "id": "6w70",
                             "single_end": false
                         },
-                        "1fjs_prepared.pdb:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "6w70_prepared.pdb:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "versions": [
@@ -32,7 +32,7 @@
             "nf-test": "0.9.2",
             "nextflow": "24.10.4"
         },
-        "timestamp": "2025-02-21T16:05:31.823991534"
+        "timestamp": "2025-02-26T13:29:01.585014227"
     },
     "PDB structure preparation": {
         "content": [

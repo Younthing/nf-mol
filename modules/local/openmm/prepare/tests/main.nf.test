@@ -18,7 +18,7 @@ nextflow_process {
             process {
                 """
                 input[0] = [
-                    [ id:'1fjs', single_end:false ],  // 元数据映射，包含结构ID
+                    [ id:'6w70', single_end:false ],  // 元数据映射，包含结构ID
                     file("${projectDir}/data/openmm/6w70.pdb")  // 输入PDB文件路径
                 ]
                 """
@@ -47,7 +47,7 @@ nextflow_process {
             process {
                 """
                 input[0] = [
-                    [ id:'1fjs', single_end:false ],  // 元数据映射
+                    [ id:'6w70', single_end:false ],  // 元数据映射
                     file("${projectDir}/data/openmm/1fjs_protein.pdb")  // 输入文件路径
                 ]
                 """
