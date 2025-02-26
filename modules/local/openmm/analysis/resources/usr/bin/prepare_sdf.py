@@ -65,26 +65,32 @@ def prepare_ligand(sdf_file, smiles, save=None):
 
     return prepared_ligand
 
+
 def main():
-    parser = argparse.ArgumentParser(description='准备配体SDF文件，包括添加氢原子和分配键级')
-    parser.add_argument('input', type=Path, help='输入SDF文件路径')
-    parser.add_argument('--smiles', '-s', required=True, help='配体的SMILES字符串')
-    parser.add_argument('--output', '-o', type=Path, required=True, help='输出SDF文件路径')
-    parser.add_argument('--image', '-i', type=Path, help='可选：保存处理前后的对比图')
+    parser = argparse.ArgumentParser(
+        description="准备配体SDF文件，包括添加氢原子和分配键级"
+    )
+    parser.add_argument("input", type=Path, help="输入SDF文件路径")
+    parser.add_argument("--smiles", "-s", required=True, help="配体的SMILES字符串")
+    parser.add_argument(
+        "--output", "-o", type=Path, required=True, help="输出SDF文件路径"
+    )
+    parser.add_argument("--image", "-i", type=Path, help="可选：保存处理前后的对比图")
     args = parser.parse_args()
 
     try:
         # 准备配体
         prepared_mol = prepare_ligand(args.input, args.smiles, args.image)
-        
+
         # 保存结果
         writer = Chem.SDWriter(str(args.output))
         writer.write(prepared_mol)
         writer.close()
-        
+
     except Exception as e:
         print(f"错误：{str(e)}", file=sys.stderr)
         sys.exit(1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
