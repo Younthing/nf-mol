@@ -1,0 +1,59 @@
+nextflow_process {
+    name "Test Process RDKIT2OMM"
+    script "../main.nf"
+    process "RDKIT2OMM"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "openmm"
+    tag "openmm/rdkit2omm"
+
+    test("Convert SDF to OpenMM PDB") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],
+                    file("${projectDir}/data/openmm/6w70_prepared.sdf")
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path("${process.out.pdb[0][1]}").exists() },
+                { assert path("${process.out.versions[0]}").exists() },
+                { assert path("${process.out.pdb[0][1]}").getText().contains("HETATM") },
+                { assert path("${process.out.versions[0]}").getText().contains("rdkit") },
+                { assert path("${process.out.versions[0]}").getText().contains("openff") },
+                { assert path("${process.out.versions[0]}").getText().contains("openmm") }
+            )
+        }
+    }
+
+    test("Convert SDF to OpenMM PDB - stub") {
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],
+                    file("${projectDir}/data/openmm/6w70_prepared.sdf")
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert path("${process.out.pdb[0][1]}").exists() },
+                { assert path("${process.out.versions[0]}").exists() }
+            )
+        }
+    }
+}
