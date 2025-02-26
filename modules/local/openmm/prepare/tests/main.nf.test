@@ -1,0 +1,68 @@
+// 定义nextflow进程测试框架
+nextflow_process {
+    // 定义测试进程的基本信息
+    name "Test Process OPENMM_PREPARE"    // 测试名称
+    script "../main.nf"                   // 要测试的脚本路径
+    process "OPENMM_PREPARE"              // 要测试的进程名称
+
+    // 测试标签，用于分类和过滤测试
+    tag "modules"                         // 表示这是模块测试
+    tag "modules_nfcore"                  // 表示这是nf-core模块
+    tag "openmm"                         // OpenMM相关测试
+    tag "openmm/prepare"                 // 特定到prepare功能测试
+
+    // 测试用例1: 标准PDB结构准备测试
+    test("PDB structure preparation") {
+        when {
+            // 定义测试输入
+            process {
+                """
+                input[0] = [
+                    [ id:'1fjs', single_end:false ],  // 元数据映射，包含结构ID
+                    file("${projectDir}/data/openmm/6w70.pdb")  // 输入PDB文件路径
+                ]
+                """
+            }
+        }
+
+        then {
+            // 定义测试断言
+            assertAll(
+                { assert process.success },                    // 验证进程是否成功完成
+                // { assert snapshot(process.out).match() },      // 验证输出是否与快照匹配
+                { assert path("${process.out.structure[0][1]}").exists() },  // 验证结构文件是否存在
+                { assert path("${process.out.versions[0]}").exists() },      // 验证版本文件是否存在
+                { assert path("${process.out.structure[0][1]}").getText().contains("ATOM") },  // 验证输出文件包含ATOM记录
+                { assert path("${process.out.versions[0]}").getText().contains("openmm") }     // 验证版本信息包含openmm
+            )
+        }
+    }
+
+    // 测试用例2: 存根模式测试
+    test("PDB structure preparation - stub") {
+        options "-stub"    // 启用存根模式，用于快速测试而不实际运行计算
+
+        when {
+            // 定义与标准测试相同的输入
+            process {
+                """
+                input[0] = [
+                    [ id:'1fjs', single_end:false ],  // 元数据映射
+                    file("${projectDir}/data/openmm/1fjs_protein.pdb")  // 输入文件路径
+                ]
+                """
+            }
+        }
+
+        then {
+            // 存根模式下的简化断言
+            assertAll(
+                { assert process.success },                    // 验证进程是否成功完成
+                { assert snapshot(process.out).match() },      // 验证输出是否与快照匹配
+                { assert path("${process.out.structure[0][1]}").exists() },  // 验证是否创建了占位输出文件
+                { assert path("${process.out.versions[0]}").exists() }       // 验证是否创建了版本文件
+            )
+        }
+    }
+
+}

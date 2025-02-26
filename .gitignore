@@ -9,6 +9,6 @@ testing*
 *.pyc
 null/
 test/
-tests/
+/tests/
 .nf-test/
 .nf-test.log    
