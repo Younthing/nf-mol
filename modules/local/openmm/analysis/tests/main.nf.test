@@ -1,0 +1,95 @@
+// 定义nextflow进程测试框架
+nextflow_process {
+    // 定义测试进程的基本信息
+    name "Test Process PREPARE_LIGAND"    // 测试名称
+    script "../main.nf"                   // 要测试的脚本路径
+    process "PREPARE_LIGAND"              // 要测试的进程名称
+
+    // 测试标签，用于分类和过滤测试
+    tag "modules"                         // 表示这是模块测试
+    tag "modules_local"                   // 表示这是本地模块
+    tag "openmm"                         // OpenMM相关测试
+    tag "openmm/prepare"                 // 特定到prepare功能测试
+
+    // 测试用例1: 标准配体准备测试
+    test("Standard ligand preparation") {
+        when {
+            // 定义测试输入
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],  // 元数据映射，包含结构ID
+                    file("${projectDir}/data/openmm/6w70_ligand.sdf"),  // 输入SDF文件路径
+                    'COc1ccc(cc1)n2c3c(c(n2)C(=O)N)CCN(C3=O)c4ccc(cc4)N5CCCCC5=O' // 输入SMILES字符串
+                ]
+                """
+            }
+        }
+
+        then {
+            // 定义测试断言
+            assertAll(
+                { assert process.success },                    // 验证进程是否成功完成
+                { assert path(process.out.ligand[0][1]).exists() },  // 验证配体文件是否存在
+                { assert path(process.out.versions[0]).exists() },      // 验证版本文件是否存在
+                { assert path(process.out.versions[0]).getText().contains("rdkit") }     // 验证版本信息包含rdkit
+            )
+        }
+    }
+
+    // 测试用例2: 配体准备测试，包含图像输出
+    test("Ligand preparation with image output") {
+        when {
+            process {
+                """
+                params.save_image = true
+                input[0] = [
+                    [ id:'6w70', single_end:false ],
+                    file("${projectDir}/data/openmm/6w70_ligand.sdf"),
+                    'COc1ccc(cc1)n2c3c(c(n2)C(=O)N)CCN(C3=O)c4ccc(cc4)N5CCCCC5=O'
+                ]
+                """
+            }
+        }
+
+        config "./nextflow.config"
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.ligand[0][1]).exists() },
+                { assert path(process.out.image[0][1]).exists() },
+                { assert path(process.out.versions[0]).exists() },
+                { assert path(process.out.versions[0]).getText().contains("rdkit") }
+            )
+        }
+    }
+
+    // 测试用例3: 存根模式测试
+    test("Ligand preparation - stub") {
+        options "-stub"    // 启用存根模式，用于快速测试而不实际运行计算
+
+        when {
+            // 定义与标准测试相同的输入
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],  // 元数据映射
+                    file("${projectDir}/data/openmm/6w70_ligand.sdf"),  // 输入文件路径
+                    'COc1ccc(cc1)n2c3c(c(n2)C(=O)N)CCN(C3=O)c4ccc(cc4)N5CCCCC5=O' // 输入SMILES字符串
+                ]
+                """
+            }
+        }
+
+        then {
+            // 存根模式下的简化断言
+            assertAll(
+                { assert process.success },                    // 验证进程是否成功完成
+                { assert path(process.out.ligand[0][1]).exists() },  // 验证是否创建了占位输出文件
+                { assert path(process.out.versions[0]).exists() }       // 验证是否创建了版本文件
+            )
+        }
+    }
+
+}
