@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/environment-schema.json
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - click=8.1.8
+  - openmm=8.2.0
+  - openmmforcefields=0.14.1
+  - pdbfixer=1.11
+  - nglview=3.1.4
+  - rdkit=2024.03.5
+  - mdtraj=1.10.0
+  - mdanalysis=2.8.0
