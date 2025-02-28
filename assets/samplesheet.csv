@@ -1,4 +1,2 @@
 id,pdb,mol,smiles
-SAMPLE1,protein1.pdb,molecule1.sdf,CCO
-SAMPLE2,protein2.pdb,molecule2.sdf,CCN
-SAMPLE3,1fjs,molecule3.sdfs,
+SAMPLE1,data/openmm/6w70.pdb,data/openmm/6w70_ligand.sdf,COc1ccc(cc1)n2c3c(c(n2)C(=O)N)CCN(C3=O)c4ccc(cc4)N5CCCCC5=O

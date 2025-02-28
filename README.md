@@ -10,6 +10,37 @@
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 [![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/open-bio/molflow)
 
+## workflow
+
+```mermaid
+flowchart TD
+    A[输入: ch_samplesheet] --> B1[OPENMM_PREPARE]
+    A --> B2[PREPARE_LIGAND]
+    B2 --> C[RDKIT2OMM]
+    B1 --> D[MERGE_COMPLEX]
+    C --> D
+    D --> E[OPENMM_SIMULATE]
+    B2 --> E
+    E --> F[OPENMM_MDANALYSIS]
+    
+    F --> G[MultiQC报告]
+    E --> G
+    B2 --> G
+    
+    subgraph 数据处理流程
+        B1
+        B2
+        C
+        D
+        E
+        F
+    end
+    
+    subgraph 结果整合
+        G
+    end
+```
+
 ## Introduction
 
 **open-bio/molflow** is a bioinformatics pipeline that ...
