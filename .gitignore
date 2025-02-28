@@ -1,7 +1,7 @@
 .nextflow*
 .conda
 work/
-/worksapce/
+**/worksapce/**
 # data/
 notebooks/data/
 results/
