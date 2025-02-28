@@ -206,7 +206,10 @@ class PocketVisualizer(MDAnalysisBase):
 
 
 def run_analysis(
-    topology: str, trajectory: str, ligand_name: str, output_dir: Optional[str] = None
+    topology: str,
+    trajectory: str,
+    ligand_name: str = "LIG",
+    output_dir: Optional[str] = None,
 ) -> dict:
     """
     Run a complete MD analysis workflow.
@@ -280,11 +283,25 @@ def run_analysis(
 
 # Usage example:
 if __name__ == "__main__":
-    topology = "topology.pdb"
-    trajectory = "trajectory.xtc"
-    ligand_name = "03P"
+    import argparse
 
-    results = run_analysis(topology, trajectory, ligand_name, output_dir="output")
+    parser = argparse.ArgumentParser(description="Run MD analysis and visualization.")
+    parser.add_argument("topology", type=str, help="Path to topology file (.pdb)")
+    parser.add_argument("trajectory", type=str, help="Path to trajectory file (.xtc)")
+    parser.add_argument("ligand_name", type=str, help="Ligand residue name")
+    parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=str,
+        default="output",
+        help="Output directory (default: output)",
+    )
+
+    args = parser.parse_args()
+
+    results = run_analysis(
+        args.topology, args.trajectory, args.ligand_name, args.output_dir
+    )
 
     print("Analysis complete. Output files:")
     for key, path in results.items():
