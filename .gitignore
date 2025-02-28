@@ -1,7 +1,8 @@
 .nextflow*
 .conda
 work/
-data/
+# data/
+notebooks/data/
 results/
 .DS_Store
 testing/
