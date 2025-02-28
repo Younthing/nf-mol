@@ -6,7 +6,7 @@ section_href: "https://nf-co.re/molflow"
 plot_type: "html"
 description: "使用的方法描述"
 data: |
-  <h4>分子模拟工作流: {{ versions.PIPELINE }}</h4>
+  <h4>分子模拟工作流</h4>
   <p class="methods_description">
     此分析由<a href="https://nf-co.re/molflow" target="_blank">分子模拟</a>流程进行，该流程基于<a href="https://nf-co.re/" target="_blank">nf-core</a>框架（版本 {{ versions.PIPELINE }}）开发。
   </p>
@@ -14,12 +14,12 @@ data: |
     流程使用了以下关键步骤：
   </p>
   <ol class="methods_description">
-    <li>蛋白质结构准备：使用 {{ versions.OPENMM_PREPARE }} 对输入的蛋白质结构进行预处理</li>
-    <li>配体准备：使用 {{ versions.PREPARE_LIGAND }} 对小分子配体进行优化</li>
-    <li>格式转换：使用 {{ versions.RDKIT2OMM }} 将配体转换为OpenMM兼容格式</li>
-    <li>复合物合并：使用 {{ versions.MERGE_COMPLEX }} 生成蛋白质-配体复合物</li>
-    <li>分子动力学模拟：使用 {{ versions.OPENMM_SIMULATE }} 进行生产性模拟</li>
-    <li>轨迹分析：使用 {{ versions.OPENMM_MDANALYSIS }} 分析模拟轨迹</li>
+    <li>蛋白质结构准备：使用 OpenMM Modeller 对输入的蛋白质结构进行预处理</li>
+    <li>配体准备：使用 RDKit 对小分子配体进行优化</li>
+    <li>格式转换：使用 RDKit 将配体转换为OpenMM兼容格式</li>
+    <li>复合物合并：使用 OpenMM Tools 生成蛋白质-配体复合物</li>
+    <li>分子动力学模拟：使用 OpenMM 进行生产性模拟</li>
+    <li>轨迹分析：使用 MDAnalysis 分析模拟轨迹</li>
   </ol>
   <p class="methods_description">
     分子模拟使用了OpenMM框架，溶剂使用显式水模型TIP3P，采用周期性边界条件。对蛋白质和配体复合物使用AMBER力场参数化，配体特异性参数通过GAFF生成。
