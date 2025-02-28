@@ -5,10 +5,9 @@ from pathlib import Path
 from rdkit import Chem
 from openff.toolkit.topology import Molecule
 from openmm import app
-from collections import defaultdict
 
 
-def rdkit_to_openmm(rdkit_mol, name="GG2", add_hydrogens=False, conformer_id=0):
+def rdkit_to_openmm(rdkit_mol, name="LIG"):
     """
     将RDKit分子转换为OpenMM分子。
 
@@ -18,80 +17,56 @@ def rdkit_to_openmm(rdkit_mol, name="GG2", add_hydrogens=False, conformer_id=0):
         需要转换的RDKit分子
     name: str
         分子名称
-    add_hydrogens: bool
-        是否添加氢原子
-    conformer_id: int
-        使用的构象ID（如果分子有多个构象）
 
     返回值
     -------
     omm_molecule: openmm.app.Modeller
         包含目标分子的OpenMM建模器对象
     """
-    if rdkit_mol is None:
-        raise ValueError("提供的RDKit分子为None")
-
-    # 可选添加氢原子
-    if add_hydrogens:
-        from rdkit import Chem
-
-        rdkit_mol = Chem.AddHs(rdkit_mol)
-
     # 第一步：RDKit转OpenFF
+    # 直觉理解：就像将文件从一种格式转换为中间格式
+    # 不这么做会怎样：无法利用OpenFF提供的功能和工具
     off_mol = Molecule.from_rdkit(rdkit_mol)
 
     # 第二步：设置分子名称
+    # 直觉理解：给分子贴上标签，方便后续识别
+    # 不这么做会怎样：在复杂体系中难以区分不同分子
     off_mol.name = name
 
-    # 第三步：为原子添加名称 - 避免添加后缀
-    element_counter = defaultdict(int)
+    # 第三步：为原子添加名称
+    # 直觉理解：给分子中的每个原子编号，像给团队成员分配工号
+    # 不这么做会怎样：无法在模拟中追踪和区分同类型的原子
+    element_counter_dict = {}
     for off_atom, rdkit_atom in zip(off_mol.atoms, rdkit_mol.GetAtoms()):
         element = rdkit_atom.GetSymbol()
-        element_counter[element] += 1
-        # 确保名称不超过4个字符（PDB规范）
-        atom_number = element_counter[element]
-        if atom_number < 100:
-            off_atom.name = f"{element}{atom_number}"
+        # 计数器更新或初始化
+        if element in element_counter_dict.keys():
+            element_counter_dict[element] += 1
         else:
-            off_atom.name = f"{element[0]}{atom_number % 100}"
+            element_counter_dict[element] = 1
+        # 命名格式：元素符号+编号（如C1, C2, O1等）
+        off_atom.name = element + str(element_counter_dict[element])
 
-    # 第四步：创建OpenMM拓扑结构
+    # 第四步：OpenFF转OpenMM
+    # 直觉理解：将中间格式转换为最终需要的格式
+    # 不这么做会怎样：无法在OpenMM中使用这个分子进行模拟
     off_mol_topology = off_mol.to_topology()
-
-    # 直接创建OpenMM拓扑，不尝试修改off_mol_topology中的残基
     mol_topology = off_mol_topology.to_openmm()
-
-    # 检查构象是否存在
-    if len(off_mol.conformers) == 0:
-        raise ValueError("分子没有构象数据")
-
-    if conformer_id >= len(off_mol.conformers):
-        raise ValueError(
-            f"构象ID {conformer_id} 超出范围，分子只有 {len(off_mol.conformers)} 个构象"
-        )
-
-    mol_positions = off_mol.conformers[conformer_id]
+    mol_positions = off_mol.conformers[0]
 
     # 第五步：单位转换（埃转纳米）
+    # 直觉理解：将度量单位统一到OpenMM使用的标准
+    # 不这么做会怎样：模拟中的距离会差1000倍，导致完全错误的结果
     mol_positions = mol_positions.to("nanometers")
 
-    # 第六步：合并拓扑和位置信息
-    omm_mol = app.Modeller(mol_topology, mol_positions)
-
-    # 重要：直接修改OpenMM拓扑中的原子名称
-    atom_index = 0
-    element_counter = defaultdict(int)
-    for atom in omm_mol.topology.atoms():
-        element = atom.element.symbol
-        element_counter[element] += 1
-        # 不添加"x"后缀，仅使用元素符号+数字
-        atom.name = f"{element}{element_counter[element]}"
-        atom_index += 1
-
-    # 修改残基名称
-    for chain in omm_mol.topology.chains():
+    # TODO 补丁做法，防止名字丢失
+    for chain in mol_topology.chains():
         for residue in chain.residues():
-            residue.name = name
+            residue.name = name  # 将所有残基的名称都设置为指定的名称
+    # 第六步：合并拓扑和位置信息
+    # 直觉理解：将分子的"连接关系"和"空间位置"组合在一起
+    # 不这么做会怎样：OpenMM无法同时知道原子如何连接以及在哪里
+    omm_mol = app.Modeller(mol_topology, mol_positions)
 
     return omm_mol
 

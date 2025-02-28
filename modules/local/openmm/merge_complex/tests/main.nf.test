@@ -1,0 +1,58 @@
+nextflow_process {
+    name "Test Process MERGE_COMPLEX"
+    script "../main.nf"
+    process "MERGE_COMPLEX"
+
+    tag "modules"
+    tag "modules_local"
+    tag "openmm"
+    tag "openmm/merge_complex"
+
+    test("Standard complex merge") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],
+                    file("${projectDir}/data/openmm/6w70_prepared.pdb"),
+                    file("${projectDir}/data/openmm/6w70_ligand_omm.pdb")
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.complex[0][1]).exists() },
+                { assert path(process.out.versions[0]).exists() },
+                { assert path(process.out.versions[0]).getText().contains("mdtraj") },
+                { assert path(process.out.versions[0]).getText().contains("openmm") }
+            )
+        }
+    }
+
+    test("Complex merge - stub") {
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'6w70', single_end:false ],
+                    file("${projectDir}/data/openmm/6w70_prepared.pdb"),
+                    file("${projectDir}/data/openmm/6w70_ligand_omm.pdb")
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.complex[0][1]).exists() },
+                { assert path(process.out.versions[0]).exists() }
+            )
+        }
+    }
+}
