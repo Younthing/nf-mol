@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import argparse
 
 from rdkit import Chem
 import mdtraj as md
@@ -63,12 +64,17 @@ class MolecularDynamics:
         return system, modeller
 
     def setup_simulation(
-        self, friction=1.0 / unit.picoseconds, stepsize=2.0 * unit.femtoseconds
+        self,
+        friction=1.0 / unit.picoseconds,
+        stepsize=2.0 * unit.femtoseconds,
+        padding=1.0 * unit.nanometers,
+        ionic_strength=0.15 * unit.molar,
     ):
         """设置模拟器"""
-        system, modeller = self.prepare_system()
+        system, modeller = self.prepare_system(
+            padding=padding, ionic_strength=ionic_strength
+        )
         integrator = mm.LangevinIntegrator(self.temperature, friction, stepsize)
-
         self.simulation = app.Simulation(modeller.topology, system, integrator)
         self.simulation.context.setPositions(modeller.positions)
         return self.simulation
@@ -130,28 +136,89 @@ class MolecularDynamics:
         self.simulation.step(steps)
 
 
-# # 使用示例
+def parse_arguments():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(
+        description="分子动力学模拟程序",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    # 必需参数
+    parser.add_argument("--pdb", required=True, help="蛋白质复合物PDB文件路径")
+
+    # 可选参数
+    parser.add_argument("--ligand", help="配体分子SDF文件路径")
+    parser.add_argument("--output", default="./output", help="输出目录路径")
+    parser.add_argument("--steps", type=int, default=5000, help="模拟步数")
+    parser.add_argument("--temperature", type=float, default=300.0, help="模拟温度(K)")
+    parser.add_argument("--write-interval", type=int, default=10, help="轨迹写入间隔")
+    parser.add_argument("--log-interval", type=int, default=250, help="日志输出间隔")
+    parser.add_argument("--protein-ff", default="amber14-all.xml", help="蛋白质力场")
+    parser.add_argument("--solvent-ff", default="amber14/tip3pfb.xml", help="溶剂力场")
+    parser.add_argument(
+        "--padding", type=float, default=1.0, help="溶剂盒子填充距离(nm)"
+    )
+    parser.add_argument(
+        "--ionic-strength", type=float, default=0.15, help="离子强度(M)"
+    )
+    parser.add_argument(
+        "--friction", type=float, default=1.0, help="朗之万摩擦系数(1/ps)"
+    )
+    parser.add_argument("--stepsize", type=float, default=2.0, help="时间步长(fs)")
+
+    return parser.parse_args()
 
 
-if __name__ == "__main__":
-    pdb = app.PDBFile("/root/learn/nf-mol/xx.pdb")
+def main():
+    """主函数"""
+    args = parse_arguments()
 
-    rdkit_ligand = Chem.SDMolSupplier(
-        "/root/learn/nf-mol/data/openmm/6w70_prepared.sdf"
-    )[0]
+    # 加载PDB文件
+    pdb = app.PDBFile(args.pdb)
 
+    # 加载配体分子(如果提供)
+    rdkit_ligand = None
+    if args.ligand:
+        rdkit_ligand = Chem.SDMolSupplier(args.ligand)[0]
+        if rdkit_ligand is None:
+            print(f"错误: 无法加载配体文件 {args.ligand}", file=sys.stderr)
+            sys.exit(1)
+
+    # 设置单位
+    temperature = args.temperature * unit.kelvin
+    padding = args.padding * unit.nanometers
+    ionic_strength = args.ionic_strength * unit.molar
+    friction = args.friction / unit.picoseconds
+    stepsize = args.stepsize * unit.femtoseconds
+
+    # 创建分子动力学实例
     md_sim = MolecularDynamics(
         complex_topology=pdb.topology,
         complex_positions=pdb.positions,
         rdkit_ligand=rdkit_ligand,
-        output_dir="simulation_results",
+        output_dir=args.output,
+        temperature=temperature,
+        protein_ff=args.protein_ff,
+        solvent_ff=args.solvent_ff,
     )
 
-    # 运行完整模拟
-    md_sim.run_simulation(steps=5000)
+    # 设置模拟参数并运行
+    md_sim.setup_simulation(
+        friction=friction,
+        stepsize=stepsize,
+        padding=padding,  # 添加这一行
+        ionic_strength=ionic_strength,  # 添加这一行
+    )
+    md_sim.run_simulation(
+        steps=args.steps,
+        write_interval=args.write_interval,
+        log_interval=args.log_interval,
+    )
 
-    # # 或者分步运行
-    # md_sim.setup_simulation()
-    # md_sim.minimize_energy()
-    # md_sim.save_topology()
-    # md_sim.run_simulation()
+    print(f"模拟完成! 结果保存在 {args.output} 目录")
+
+
+if __name__ == "__main__":
+    main()
+
+#  python modules/local/openmm/simulate/resources/usr/bin/simulate.py --pdb data/openmm/6w70_complex.pdb --ligand data/openmm/6w70_prepared.sdf --output sim_results --steps 10000 --temperature 310
