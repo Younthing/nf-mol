@@ -5,9 +5,14 @@
 */
 /* IMPORT 语句 */
 // 导入格式: include { 组件名 } from '路径' 路径可以到main.nf也可以到它的父目录
+include { OPENMM_PREPARE } from '../modules/local/openmm/prepare/main'
+include { PREPARE_LIGAND } from '../modules/local/openmm/analysis/main'
+include { RDKIT2OMM } from '../modules/local/openmm/rdkit2omm/main'
+include { MERGE_COMPLEX } from '../modules/local/openmm/merge_complex/main'
+include { OPENMM_SIMULATE } from '../modules/local/openmm/simulate/main'
+include { OPENMM_MDANALYSIS } from '../modules/local/openmm/mdanalysis/main'
 
-include { TEST_BASE } from '../modules/local/example/main'
-include { TEST_PLOTLY } from '../modules/local/example_plotly'
+
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -28,31 +33,59 @@ workflow MOLFLOW {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+
     //
-    // MODULE: Run TEST_MODULE
+    // MODULE: Run OPENMM workflow
     //
-    TEST_BASE(
-        ch_samplesheet
+
+    // OPENMM_PREPARE处理蛋白质结构
+    OPENMM_PREPARE(
+        ch_samplesheet.map { meta, pdb, _mol -> [meta, pdb] }
     )
 
-    TEST_PLOTLY()
+    // PREPARE_LIGAND处理配体，需要meta, mol文件和smiles
+    PREPARE_LIGAND(
+        ch_samplesheet.map { meta, _pdb, mol -> [meta, mol, meta.smiles] }
+    )
 
-    // mix() 合并通道示例:
-    // 假设 TEST_MODULE.out.module 输出为: ['test1', 'result1.txt']
-    //                                    ['test2', 'result2.txt']
-    // collect { it[1] } 提取第二个元素: ['result1.txt', 'result2.txt']
-    // mix 操作后: ch_multiqc_files 现在包含: ['result1.txt', 'result2.txt']
+    // RDKIT2OMM将PREPARE_LIGAND的输出转换为OpenMM格式
+    RDKIT2OMM(
+        PREPARE_LIGAND.out.ligand
+    )
+
+    // MERGE_COMPLEX合并蛋白质和配体
+    MERGE_COMPLEX(
+        OPENMM_PREPARE.out.structure.join(RDKIT2OMM.out.pdb)
+    )
+
+    // OPENMM_SIMULATE进行模拟计算
+    OPENMM_SIMULATE(
+        MERGE_COMPLEX.out.complex.join(PREPARE_LIGAND.out.ligand)
+    )
+
+    // OPENMM_MDANALYSIS分析模拟结果
+    OPENMM_MDANALYSIS(
+        OPENMM_SIMULATE.out.topology.join(OPENMM_SIMULATE.out.trajectory)
+    )
+
+    // 收集所有可视化结果和分析输出用于MultiQC
     ch_multiqc_files = ch_multiqc_files.mix(
-        TEST_BASE.out.module.collect { it[1] },
-        TEST_PLOTLY.out.plot.collect(),
+        PREPARE_LIGAND.out.image.collect { it[1] }.ifEmpty([]),
+        OPENMM_MDANALYSIS.out.aligned_trajectory.collect { it[1] }.ifEmpty([]),
+        OPENMM_MDANALYSIS.out.rmsd_plot.collect { it[1] }.ifEmpty([]),
+        OPENMM_MDANALYSIS.out.frame_rmsd.collect { it[1] }.ifEmpty([]),
+        OPENMM_MDANALYSIS.out.pocket_view.collect { it[1] }.ifEmpty([]),
+        OPENMM_MDANALYSIS.out.rmsd_data.collect { it[1] }.ifEmpty([]),
     )
 
-    // first() 获取第一个元素
-    // 假设 TEST_MODULE.out.versions 输出: ['v1.0', 'v2.0']
-    // first() 后获得: 'v1.0'
+    // 收集所有模块的版本信息
     ch_versions = ch_versions.mix(
-        TEST_BASE.out.versions,
-        TEST_PLOTLY.out.versions,
+        OPENMM_PREPARE.out.versions,
+        PREPARE_LIGAND.out.versions,
+        RDKIT2OMM.out.versions,
+        MERGE_COMPLEX.out.versions,
+        OPENMM_SIMULATE.out.versions,
+        OPENMM_MDANALYSIS.out.versions,
     )
 
     //
@@ -61,15 +94,11 @@ workflow MOLFLOW {
     softwareVersionsToYAML(ch_versions)
         .collectFile(
             storeDir: "${params.outdir}/pipeline_info",
-            name: '' + 'pipeline_software_' + 'mqc_' + 'versions.yml',
+            name: 'pipeline_software_mqc_versions.yml',
             sort: true,
             newLine: true,
         )
         .set { ch_collated_versions }
-    // 生成的YAML文件内容:
-    // test_module: v1.2.3
-    // xxx: v 
-    // xxx: v 
 
     //
     // MODULE: MultiQC
@@ -97,7 +126,7 @@ workflow MOLFLOW {
         parameters_schema: "nextflow_schema.json"
     )
 
-    // 创建一个值为参数摘要的通道,用于 MultiQC 报告
+    // 创建一个值为参数摘要的通道，用于 MultiQC 报告
     ch_workflow_summary = Channel.value(paramsSummaryMultiqc(summary_params))
 
     // 将工作流摘要文件混入 multiqc 文件通道

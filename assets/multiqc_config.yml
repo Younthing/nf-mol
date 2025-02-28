@@ -1,6 +1,14 @@
-report_comment: >
-  此报告由 MultiQC 生成，包含流程分析的质控结果.
+# 分子模拟工作流 MultiQC 配置文件
 
+report_comment: >
+  此报告由 MultiQC 生成，包含分子模拟流程的质控和分析结果。
+  流程使用OpenMM进行分子动力学模拟和分析。
+
+# 自定义报告标题
+title: "分子模拟流程分析报告"
+subtitle: "使用 Nextflow 和 OpenMM 分析蛋白质-配体复合物"
+
+# 报告部分顺序设置
 report_section_order:
   "open-bio-molflow-methods-description":
     order: -1000
@@ -9,24 +17,126 @@ report_section_order:
   "open-bio-molflow-summary":
     order: -1002
 
+# 导出所有图表
 export_plots: true
 
+# 禁用版本检测
 disable_version_detection: true
 
-# 文件匹配 (根据 sp): MultiQC 首先会根据 sp 定义的搜索模式遍历指定的目录。
+# 文件匹配规则
 sp:
-  scatter_plot:
-    fn: "*scatter_plot_mqc.html"
+  # 配体准备图像
+  ligand_preparation:
+    fn: "*_comparison.png"
 
-# 排序
+  # MD轨迹分析结果
+  aligned_trajectory:
+    fn: "*aligned_md.html"
+
+  rmsd_plot:
+    fn: "*rmsd_plot.png"
+
+  frame_rmsd:
+    fn: "*frame_rmsd_plot.png"
+
+  pocket_view:
+    fn: "*pocket_view.html"
+
+  # RMSD数据文件（如果需要显示表格数据）
+  rmsd_data:
+    fn: "*rmsd_results.csv"
+
+# 自定义内容顺序
 custom_content:
   order:
-    - scatter_plot
+    - ligand_preparation
+    - aligned_trajectory
+    - rmsd_plot
+    - frame_rmsd
+    - pocket_view
+    - rmsd_data
 
 # 定义元数据
 custom_data:
-  scatter_plot:
+  ligand_preparation:
+    section_name: "配体准备与优化"
+    description: "配体结构准备与比较"
+    plot_type: "image"
+
+  aligned_trajectory:
     file_format: "html"
-    section_name: "Random Scatter Plot"
-    description: "使用Plotly生成的随机数据散点图"
+    section_name: "MD轨迹可视化"
+    description: "分子动力学模拟轨迹的对齐视图"
     plot_type: "html"
+
+  rmsd_plot:
+    section_name: "RMSD分析"
+    description: "蛋白质和配体在模拟过程中的结构偏离均方根距离"
+    plot_type: "image"
+
+  frame_rmsd:
+    section_name: "帧RMSD分析"
+    description: "各帧与参考结构的RMSD比较"
+    plot_type: "image"
+
+  pocket_view:
+    file_format: "html"
+    section_name: "结合口袋分析"
+    description: "蛋白质-配体结合口袋的交互式视图"
+    plot_type: "html"
+
+  rmsd_data:
+    file_format: "csv"
+    section_name: "RMSD数据表"
+    description: "RMSD分析的数值结果"
+    plot_type: "table"
+
+# 表格设置
+table_columns_visible:
+  rmsd_data:
+    - Frame
+    - Protein_RMSD
+    - Ligand_RMSD
+    - Complex_RMSD
+
+# 表格条件格式化
+table_cond_formatting_rules:
+  rmsd_data:
+    - Protein_RMSD:
+        pass: [0, 3]
+        warn: [3, 5]
+        fail: [5, 100]
+    - Ligand_RMSD:
+        pass: [0, 2]
+        warn: [2, 4]
+        fail: [4, 100]
+
+# 自定义常规设置
+show_hide_buttons: true
+make_sections: true
+show_analysis_paths: true
+data_dir_depth: 2
+
+# 颜色主题设置
+colors:
+  light:
+    num_datasets: "#f7a35c"
+    trim: "#01a8fe"
+    aligned: "#8bbc21"
+    protein: "#1E88E5"
+    ligand: "#D81B60"
+    complex: "#8E24AA"
+  dark:
+    num_datasets: "#a17f21"
+    trim: "#0187c5"
+    aligned: "#51910c"
+    protein: "#0D47A1"
+    ligand: "#880E4F"
+    complex: "#4A148C"
+
+# 模块设置
+module_order:
+  - custom_content
+  - csv
+  - plot
+  - html
