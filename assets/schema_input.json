@@ -22,6 +22,14 @@
                 "type": "string",
                 "pattern": "^\\S+(\\.sdf)?$",
                 "errorMessage": "必须是非空的字符串，sdf文件地址、SMILES"
+            },
+            "smiles": {
+                "type": "string",
+                "description": "可选的SMILES表示",
+                "default": "",
+                "meta": ["smiles"],
+                "pattern": "^.*$",
+                "errorMessage": "SMILES可以为空，但必须是字符串"
             }
         },
         "required": ["id", "pdb", "mol"]

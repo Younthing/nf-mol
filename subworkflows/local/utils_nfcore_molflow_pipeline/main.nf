@@ -74,6 +74,14 @@ workflow PIPELINE_INITIALISATION {
             pdb = pdb instanceof File ? pdb : file(pdb)
             mol = mol instanceof File ? mol : file(mol)
 
+            // 将smiles添加到meta中
+            if (meta.containsKey('smiles')) {
+                meta.smiles = meta.smiles ?: ''
+            }
+            else {
+                meta.smiles = ''
+            }
+
             return [meta, pdb, mol]
         }
 
