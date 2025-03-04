@@ -61,7 +61,19 @@ class MolecularDynamics:
             ionicStrength=ionic_strength,
         )
 
-        system = forcefield.createSystem(modeller.topology, nonbondedMethod=app.PME)
+        system = forcefield.createSystem(
+            modeller.topology,
+            nonbondedMethod=app.PME,
+            nonbondedCutoff=1.0 * unit.nanometer,
+            constraints=app.HBonds,  # 添加氢键约束
+            rigidWater=True,  # 刚性水分子
+            removeCMMotion=True,  # 移除质心运动
+        )
+
+        # 添加压力耦合
+        system.addForce(
+            mm.MonteCarloBarostat(1 * unit.atmospheres, self.temperature, 25)
+        )
 
         return system, modeller
 
@@ -86,6 +98,22 @@ class MolecularDynamics:
         if self.simulation is None:
             self.setup_simulation()
         self.simulation.minimizeEnergy()
+
+    def equilibrate(self, steps=5000):
+        """系统平衡"""
+        print("开始系统平衡...")
+
+        # NVT平衡
+        print("执行NVT平衡...")
+        self.simulation.context.setVelocitiesToTemperature(self.temperature * 0.1)
+        self.simulation.step(1000)  # 低温平衡
+
+        self.simulation.context.setVelocitiesToTemperature(self.temperature)
+        self.simulation.step(steps)  # 目标温度平衡
+
+        # NPT平衡
+        print("执行NPT平衡...")
+        self.simulation.step(steps)
 
     def save_topology(self):
         """保存拓扑结构"""
@@ -131,10 +159,15 @@ class MolecularDynamics:
             self.setup_simulation()
 
         self.minimize_energy()
+        print("能量最小化完成")
+
+        self.equilibrate()  # 添加平衡步骤
+        print("系统平衡完成")
+
         self.save_topology()
         self.add_reporters(steps, write_interval, log_interval)
 
-        self.simulation.context.setVelocitiesToTemperature(self.temperature)
+        print("开始生产模拟...")
         self.simulation.step(steps)
 
 
@@ -175,6 +208,8 @@ def main():
     """主函数"""
     args = parse_arguments()
 
+    print("正在初始化模拟系统...")
+
     # 加载PDB文件
     pdb = app.PDBFile(args.pdb)
 
@@ -193,6 +228,10 @@ def main():
     friction = args.friction / unit.picoseconds
     stepsize = args.stepsize * unit.femtoseconds
 
+    # 修改默认步数，确保足够的模拟时间
+    if args.steps < 25000:  # 如果步数太少，给出警告
+        print("警告: 建议模拟步数至少为25000步以获得有意义的结果")
+
     # 创建分子动力学实例
     md_sim = MolecularDynamics(
         complex_topology=pdb.topology,
@@ -205,12 +244,15 @@ def main():
     )
 
     # 设置模拟参数并运行
+    print("正在设置模拟参数...")
     md_sim.setup_simulation(
         friction=friction,
         stepsize=stepsize,
-        padding=padding,  # 添加这一行
-        ionic_strength=ionic_strength,  # 添加这一行
+        padding=padding,
+        ionic_strength=ionic_strength,
     )
+
+    print("开始模拟...")
     md_sim.run_simulation(
         steps=args.steps,
         write_interval=args.write_interval,
@@ -218,7 +260,7 @@ def main():
     )
 
     print(f"模拟完成! 结果保存在 {args.output} 目录")
-
+    
 
 if __name__ == "__main__":
     main()
